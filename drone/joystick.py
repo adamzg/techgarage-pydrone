@@ -55,18 +55,18 @@ while True:
                 print("Drone descending.")
                 drone.update(cmd=movePCMDCmd(True, 0, 0, 0, -50))
                 drone.wait(0.050)
-            if event.button == 4:
-                print("Taking picture...")
-                drone.update(cmd=takePictureCmd())
-            if event.button == 5:
-                if video is True:
-                    print("Enabling video stream.")
-                    drone.update(cmd=videoStreamingCmd(enable=True), ackRequest=True)
-                    video = False
-                else:
-                    print("Disabling video stream.")
-                    drone.update(cmd=videoStreamingCmd(enable=False), ackRequest=True)
-                    video = True
+            # if event.button == 4:
+            #     print("Taking picture...")
+            #     drone.update(cmd=takePictureCmd())
+            # if event.button == 5:
+            #     if video is True:
+            #         print("Enabling video stream.")
+            #         drone.update(cmd=videoStreamingCmd(enable=True), ackRequest=True)
+            #         video = False
+            #     else:
+            #         print("Disabling video stream.")
+            #         drone.update(cmd=videoStreamingCmd(enable=False), ackRequest=True)
+            #         video = Truebutton_map.py
 
         if event.type == pygame.JOYAXISMOTION:
             drone.update(cmd=movePCMDCmd(True, (50 * my_joystick.get_axis(2)), (-50 * my_joystick.get_axis(1)), 0, 0))
