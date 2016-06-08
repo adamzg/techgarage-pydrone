@@ -9,7 +9,7 @@ class Matcher:
         self.minimum_matches = mininum_matches
 
         # create SIFT object features extractor
-        self.sift = cv2.xfeatures2d.SIFT_create()
+        self.sift = cv2.xfeatures2d.SURF_create(4500)
         index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
         search_params = dict(checks=50)
 
@@ -19,8 +19,9 @@ class Matcher:
         self.descriptors = {}
         for (label, filename) in templates:
             img = cv2.imread(filename, 0)
-            print "Label = %s, Filename = %s" % (label, filename)
+            print "Label = %s, Filename = %s" % (label, filename)	
             kp, des = self.sift.detectAndCompute(img, None)
+	    print "Finish detectAndCompute"
             self.descriptors[label] = des
 
 
