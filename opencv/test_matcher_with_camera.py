@@ -4,9 +4,9 @@ from matcher import Matcher
 
 
 
-matcher = Matcher([("number-1", "./templates/animal_number_1.jpg"),
-                   ("number-2", "./templates/animal_number_2.jpg"),
-                   ("number-3", "./templates/animal_number_3.jpg")
+matcher = Matcher([("number-1", "./templates/animal_number_1.jpg")
+#                   ("number-2", "./templates/animal_number_2.jpg"),
+#                   ("number-3", "./templates/animal_number_3.jpg"),
 #                   ("number-4", "./templates/animal_number_4.jpg"),
 #                   ("number-5", "./templates/animal_number_5.jpg"),
 #                   ("number-6", "./templates/animal_number_6.jpg"),
@@ -23,6 +23,7 @@ cam = cv2.VideoCapture(0)
 cnt = 0
 while True:
     (grabbed, img) = cam.read()
-    # print matcher.match(img)
-    cv2.imshow("Pic", img)
-    cv2.waitKey(0)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    print matcher.match(gray)
+    #cv2.imshow("Pic", img)
+    #cv2.waitKey(10)

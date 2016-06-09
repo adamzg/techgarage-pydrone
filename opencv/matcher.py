@@ -32,18 +32,19 @@ class Matcher:
         detected_label = None
 
         for label, des in self.descriptors.items():
-            matches = self.flann.knnMatch(des, imgdes, k=2)
+            if imgdes is not None and imgdes.size > 0 and len(imgk) > 2 and des is not None and des.size > 0:
+                matches = self.flann.knnMatch(des, imgdes, k=2)
 
-            ## store all the good matches as per Lowe's ratio test.
-            cnt = 0
-            for m, n in matches:
-                if m.distance < 0.7 * n.distance:
-                    cnt = cnt + 1
-            print "Found %s matches for %s" % (cnt, label)
+                ## store all the good matches as per Lowe's ratio test.
+                cnt = 0
+                for m, n in matches:
+                    if m.distance < 0.7 * n.distance:
+                        cnt = cnt + 1
+                print "Found %s matches for %s" % (cnt, label)
 
-            if cnt > self.minimum_matches and cnt > max_matches:
-                max_matches = cnt
-                detected_label = label
+                if cnt > self.minimum_matches and cnt > max_matches:
+                    max_matches = cnt
+                    detected_label = label
 
 
         return detected_label
