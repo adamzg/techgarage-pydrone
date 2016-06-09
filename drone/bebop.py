@@ -9,6 +9,8 @@ import socket
 import datetime
 import struct
 import time
+import numpy
+import subprocess as sp
 
 from navdata import *
 from commands import *
@@ -27,8 +29,31 @@ DISCOVERY_PORT = 44444
 NAVDATA_PORT = 43210 # d2c_port
 COMMAND_PORT = 54321 # c2d_port
 
+class JpegReader(Thread):
+    def __init__(self, drone):
+        Thread.__init__(self)
+        self.drone = drone
+        self.command = ["ffmpeg", '-i', '-', '-f', 'image2pipe', '-pix_fmt', 'rgb24', '-vcodec', 'rawvideo', '-']
+        self.ffmpeg = sp.Popen(self.command, stdin=sp.PIPE, stdout=sp.PIPE, bufsize=10 ** 8)
+
+    def run(self):
+        while True:
+            raw_image = self.ffmpeg.stdout.read(640 * 368 * 3)
+            # transform the byte read into a numpy array
+            if len(raw_image) != 640 * 368 * 3:
+                break
+            image = numpy.fromstring(raw_image, dtype='uint8')
+            image = image.reshape((368, 640, 3))
+            if self.drone.videoCbk:
+                self.drone.videoCbk(image, self.drone, False)
+
+    def appendFrame(self, data):
+        self.ffmpeg.stdin.write(data)
+        self.ffmpeg.stdin.flush()
+
+
 class Bebop:
-    def __init__( self, metalog=None, onlyIFrames=True ):
+    def __init__( self, metalog=None, onlyIFrames=True, jpegStream=False ):
         if metalog is None:
             self._discovery()
             metalog = MetaLog()
@@ -43,7 +68,7 @@ class Bebop:
         self.console = metalog.createLoggedInput( "console", myKbhit ).get
         self.metalog = metalog
         self.buf = ""
-        self.videoFrameProcessor = VideoFrames( onlyIFrames=onlyIFrames, verbose=False )
+        self.jpegStream = jpegStream
         self.videoCbk = None
         self.videoCbkResults = None
         self.battery = None
@@ -60,7 +85,14 @@ class Bebop:
         self.navigateHomeState = None
         self.config()
         self.commandSender.start()
-        
+        if self.jpegStream:
+            self.videoFrameProcessor = VideoFrames(onlyIFrames=False, verbose=False)
+            self.reader = JpegReader(self)
+            self.reader.setDaemon(True)
+            self.reader.start()
+        else:
+            self.videoFrameProcessor = VideoFrames(onlyIFrames=onlyIFrames, verbose=False)
+
     def _discovery( self ):
         "start communication with the robot"
         filename = "tmp.bin" # TODO combination outDir + date/time
@@ -120,7 +152,10 @@ class Bebop:
                     self.videoFrameProcessor.append( data )
                     frame = self.videoFrameProcessor.getFrameEx()
                     if frame:
-                        self.videoCbk( frame, debug=self.metalog.replay )
+                        if not self.jpegStream:
+                            self.videoCbk( frame, self, debug=self.metalog.replay )
+                        else:
+                            self.reader.appendFrame(frame[-1])
                     if self.videoCbkResults:
                         ret = self.videoCbkResults()
                         if ret is not None:
