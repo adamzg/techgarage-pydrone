@@ -1,19 +1,20 @@
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
+
 
 #img1 = cv2.imread('/home/user1/opencv/samples/data/box.png',0)          # queryImage
 img1 = cv2.imread('./templates/first-logo.jpg',0)          # queryImage
 img2 = cv2.imread('/home/user1/opencv/samples/data/box_in_scene.png',0) # trainImage
 
 # Initiate SIFT detector
-sift = cv2.xfeatures2d.SIFT_create()
+sift = cv2.xfeatures2d.SURF_create(1000)
+#sift = cv2.xfeatures2d.SIFT_create()
 
 # find the keypoints and descriptors with SIFT
 kp1, des1 = sift.detectAndCompute(img1,None)
 bf = cv2.BFMatcher()
 
-cam = cv2.VideoCapture(1)
+cam = cv2.VideoCapture(0)
 while True:
     (grabbed, frame) = cam.read()
     img2  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

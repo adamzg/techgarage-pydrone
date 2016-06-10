@@ -9,7 +9,7 @@ class Matcher:
         self.min_keypoints_pct_match = min_keypoints_pct_match
 
         # create SIFT object features extractor
-        self.sift = cv2.xfeatures2d.SIFT_create()
+        self.sift = cv2.xfeatures2d.SURF_create(300, 10, 2)
 
         # create matcher
         self.bf = cv2.BFMatcher()
@@ -40,7 +40,7 @@ class Matcher:
                     good.append([m])
             #print "Label = %s, mathes = %s, keypoints = %s ", (label, len(good), len(template_keypoints))
             match_ratio = len(good) * 100 / len(template_keypoints)
-            #print match_ratio
+            print label, match_ratio
             if match_ratio > self.min_keypoints_pct_match and match_ratio > detected_keypoints_ratio:
                  detected_keypoints_ratio = match_ratio
                  detected_label = label
