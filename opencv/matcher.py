@@ -3,48 +3,46 @@ import cv2
 
 
 class Matcher:
-    def __init__(self, templates, mininum_matches  = 25):
-        FLANN_INDEX_KDTREE = 0
-        # set min matches required to confirm template was detected
-        self.minimum_matches = mininum_matches
+    def __init__(self, templates, min_keypoints_pct_match = 20):
+
+        # min. percentage of keypoints needs to match
+        self.min_keypoints_pct_match = min_keypoints_pct_match
 
         # create SIFT object features extractor
-        self.sift = cv2.xfeatures2d.SURF_create(4500)
-        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-        search_params = dict(checks=50)
+        self.sift = cv2.xfeatures2d.SIFT_create()
 
-        # create object matcher
-        self.flann = cv2.FlannBasedMatcher(index_params, search_params)
+        # create matcher
+        self.bf = cv2.BFMatcher()
 
         self.descriptors = {}
         for (label, filename) in templates:
             img = cv2.imread(filename, 0)
-            print "Label = %s, Filename = %s" % (label, filename)	
             kp, des = self.sift.detectAndCompute(img, None)
-	    print "Finish detectAndCompute"
-            self.descriptors[label] = des
+            print "Analyzed - Label = %s, Filename = %s, # of Keypoints = %s" % (label, filename, len(kp))
+            self.descriptors[label] = (kp, des)
 
 
     def match(self, img):
-        imgk, imgdes = self.sift.detectAndCompute(img, None)
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_keypoints, img_descriptor = self.sift.detectAndCompute(img, None)
 
         max_matches = 0
         detected_label = None
+        detected_keypoints_ratio = 0
 
-        for label, des in self.descriptors.items():
-            if imgdes is not None and imgdes.size > 0 and len(imgk) > 2 and des is not None and des.size > 0:
-                matches = self.flann.knnMatch(des, imgdes, k=2)
+        for label, (template_keypoints, template_descriptor) in self.descriptors.items():
+            matches = self.bf.knnMatch(img_descriptor, template_descriptor, k=2)
 
-                ## store all the good matches as per Lowe's ratio test.
-                cnt = 0
-                for m, n in matches:
-                    if m.distance < 0.7 * n.distance:
-                        cnt = cnt + 1
-                print "Found %s matches for %s" % (cnt, label)
-
-                if cnt > self.minimum_matches and cnt > max_matches:
-                    max_matches = cnt
-                    detected_label = label
-
+            # Apply ratio test
+            good = []
+            for m, n in matches:
+                if m.distance < 0.75 * n.distance:
+                    good.append([m])
+            #print "Label = %s, mathes = %s, keypoints = %s ", (label, len(good), len(template_keypoints))
+            match_ratio = len(good) * 100 / len(template_keypoints)
+            #print match_ratio
+            if match_ratio > self.min_keypoints_pct_match and match_ratio > detected_keypoints_ratio:
+                 detected_keypoints_ratio = match_ratio
+                 detected_label = label
 
         return detected_label

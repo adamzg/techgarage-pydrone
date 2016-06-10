@@ -2,28 +2,19 @@ import time
 import cv2
 from matcher import Matcher
 
+matcher = Matcher([("fau-logo", "./templates/fau-logo.png"),
+                   ("first-logo", "./templates/first-logo.jpg"),
+                   ("nextera-logo", "./templates/nextera-energy-logo.jpg"),
+                   ("techgarage-logo", "./templates/techgarage-logo.png")
+                   ], min_keypoints_pct_match=15)
 
-
-matcher = Matcher([("number-1", "./templates/animal_number_1.jpg")
-#                   ("number-2", "./templates/animal_number_2.jpg"),
-#                   ("number-3", "./templates/animal_number_3.jpg"),
-#                   ("number-4", "./templates/animal_number_4.jpg"),
-#                   ("number-5", "./templates/animal_number_5.jpg"),
-#                   ("number-6", "./templates/animal_number_6.jpg"),
-#                   ("number-7", "./templates/animal_number_7.jpg"),
-#                   ("number-8", "./templates/animal_number_8.jpg"),
-#                   ("number-9", "./templates/animal_number_9.jpg")
-                  ], mininum_matches=20)
-
-#img = cv2.imread("./images/0.jpg")
-#print matcher.match(img)
-
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 
 cnt = 0
 while True:
     (grabbed, img) = cam.read()
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    print matcher.match(gray)
-    #cv2.imshow("Pic", img)
-    #cv2.waitKey(10)
+    print matcher.match(img)
+    cv2.imshow("Pic", img)
+    key = cv2.waitKey(10)
+    if key == ord('q'):
+        break
