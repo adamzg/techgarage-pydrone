@@ -1,5 +1,7 @@
 import cv2
 from imutils.video import VideoStream
+import datetime
+
 
 left_camera = cv2.VideoCapture(0)
 left_camera.set(cv2.CAP_PROP_FRAME_WIDTH,320)
@@ -13,9 +15,24 @@ right_camera.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 #right_camera = VideoStream(usePiCamera=False, src=1, framerate=5).start()
 
 cnt = 0
+start = datetime.datetime.now()
+fps = 0
+ms = 0
 while True:
+    diff = datetime.datetime.now() - start
+
+    if ms < diff.microseconds:
+        cnt = cnt + 1
+    else:
+        fps = cnt
+        cnt = 0
+        start = datetime.datetime.now()
+    ms = diff.microseconds
+
     g1, left_image = left_camera.read()
     g2, right_image = right_camera.read()
+    if fps != 0:
+        cv2.putText(left_image, "FPS: %d" % (fps), (5, 15), cv2.FONT_HERSHEY_PLAIN, 1, (0,255,0))
 
     cv2.imshow("Left", left_image)
     cv2.imshow("Right", right_image)
