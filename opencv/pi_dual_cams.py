@@ -1,13 +1,12 @@
 import cv2
-from imutils.video import VideoStream
 import datetime
 
 
-left_camera = cv2.VideoCapture(0)
+left_camera = cv2.VideoCapture(1)
 left_camera.set(cv2.CAP_PROP_FRAME_WIDTH,320)
 left_camera.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 
-right_camera = cv2.VideoCapture(1)
+right_camera = cv2.VideoCapture(2)
 right_camera.set(cv2.CAP_PROP_FRAME_WIDTH,320)
 right_camera.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 
@@ -24,7 +23,8 @@ while True:
     if ms < diff.microseconds:
         cnt = cnt + 1
     else:
-        fps = cnt
+        if cnt != 0:
+            fps = cnt
         cnt = 0
         start = datetime.datetime.now()
     ms = diff.microseconds
