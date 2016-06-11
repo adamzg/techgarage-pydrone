@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-img = cv2.imread('./templates/techrunway-logo.png')
+img = cv2.imread('./templates/techgarage-logo.png')
 gray= cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 sift = cv2.xfeatures2d.SIFT_create()
