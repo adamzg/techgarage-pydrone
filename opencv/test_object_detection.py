@@ -14,7 +14,11 @@ sift = cv2.xfeatures2d.SIFT_create()
 kp1, des1 = sift.detectAndCompute(img1,None)
 bf = cv2.BFMatcher()
 
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
+#cam.set(cv2.CAP_PROP_FRAME_WIDTH,320)
+#cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+
 while True:
     (grabbed, frame) = cam.read()
     img2  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
