@@ -33,7 +33,7 @@ class JpegReader(Thread):
     def __init__(self, drone):
         Thread.__init__(self)
         self.drone = drone
-        self.command = ["ffmpeg", '-i', '-', '-f', 'image2pipe', '-pix_fmt', 'rgb24', '-vcodec', 'rawvideo', '-']
+        self.command = ["ffmpeg", '-i', '-', '-f', 'image2pipe', '-pix_fmt', 'bgr24', '-q:v', '1', '-vcodec', 'rawvideo', '-']
         self.ffmpeg = sp.Popen(self.command, stdin=sp.PIPE, stdout=sp.PIPE, bufsize=10 ** 8)
 
     def run(self):
