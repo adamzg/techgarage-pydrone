@@ -30,22 +30,40 @@ NAVDATA_PORT = 43210 # d2c_port
 COMMAND_PORT = 54321 # c2d_port
 
 class JpegReader(Thread):
-    def __init__(self, drone):
+    def __init__(self, drone, fps):
         Thread.__init__(self)
+        self.fps = fps
+        self.interval = 0
+        if self.fps > 0:
+            self.interval = 1000000 // self.fps
         self.drone = drone
         self.command = ["ffmpeg", '-i', '-', '-f', 'image2pipe', '-pix_fmt', 'bgr24', '-q:v', '1', '-vcodec', 'rawvideo', '-']
         self.ffmpeg = sp.Popen(self.command, stdin=sp.PIPE, stdout=sp.PIPE, bufsize=10 ** 8)
 
     def run(self):
+        ms = datetime.datetime.now()
+        sum = 0
         while True:
             raw_image = self.ffmpeg.stdout.read(640 * 368 * 3)
+
             # transform the byte read into a numpy array
             if len(raw_image) != 640 * 368 * 3:
                 break
             image = numpy.fromstring(raw_image, dtype='uint8')
             image = image.reshape((368, 640, 3))
-            if self.drone.videoCbk:
+
+            diff = datetime.datetime.now() - ms
+            sum = sum + diff.microseconds
+            #print diff.microseconds, self.interval, self.fps
+
+            if self.drone.videoCbk and sum > self.interval:
                 self.drone.videoCbk(image, self.drone, False)
+
+            if sum > self.interval:
+                sum = 0
+
+            ms = datetime.datetime.now()
+
 
     def appendFrame(self, data):
         self.ffmpeg.stdin.write(data)
@@ -53,7 +71,7 @@ class JpegReader(Thread):
 
 
 class Bebop:
-    def __init__( self, metalog=None, onlyIFrames=True, jpegStream=False ):
+    def __init__( self, metalog=None, onlyIFrames=True, jpegStream=False, fps = 0 ):
         if metalog is None:
             self._discovery()
             metalog = MetaLog()
@@ -69,6 +87,7 @@ class Bebop:
         self.metalog = metalog
         self.buf = ""
         self.jpegStream = jpegStream
+        self.fps = fps
         self.videoCbk = None
         self.videoCbkResults = None
         self.battery = None
@@ -87,7 +106,7 @@ class Bebop:
         self.commandSender.start()
         if self.jpegStream:
             self.videoFrameProcessor = VideoFrames(onlyIFrames=False, verbose=False)
-            self.reader = JpegReader(self)
+            self.reader = JpegReader(self, self.fps)
             self.reader.setDaemon(True)
             self.reader.start()
         else:
