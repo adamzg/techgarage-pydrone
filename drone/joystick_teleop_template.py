@@ -25,7 +25,7 @@ else:
 
 while not done:
     # EVENT PROCESSING STEP
-    for event in pygame.qevent.get():  # User did something
+    for event in pygame.event.get():  # User did something
         if event.type == pygame.QUIT:  # If user clicked close
             done = True  # Flag that we are done so we exit this loop
 
