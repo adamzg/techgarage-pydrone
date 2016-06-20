@@ -215,14 +215,14 @@ class Bebop:
     def takeoff( self ):
         self.update( videoRecordingCmd( on=True ) )
         for i in xrange(10):
-            print(i,)
+            #print(i,)
             self.update( cmd=None )
         print
         print("Taking off ...",)
         self.update( cmd=takeoffCmd() )
         prevState = None
         for i in xrange(100):
-            print(i,)
+            #print(i,)
             self.update( cmd=None )
             if self.flyingState != 1 and prevState == 1:
                 break
@@ -233,14 +233,14 @@ class Bebop:
         print("Landing ...",)
         self.update( cmd=landCmd() )
         for i in xrange(100):
-            print(i,)
+            #print(i,)
             self.update( cmd=None )
             if self.flyingState == 0: # landed
                 break
         print("LANDED")
         self.update( videoRecordingCmd( on=False ) )
         for i in xrange(30):
-            print(i,)
+            #print(i,)
             self.update( cmd=None )
         print
 
@@ -254,12 +254,12 @@ class Bebop:
         print("Trim:",)
         self.flatTrimCompleted = False
         for i in xrange(10):
-            print(i,)
+            #print(i,)
             self.update( cmd=None )
         print
         self.update( cmd=trimCmd() )
         for i in xrange(10):
-            print(i,)
+            #print(i,)
             self.update( cmd=None )
             if self.flatTrimCompleted:
                 break
@@ -316,7 +316,7 @@ def testCamera( robot ):
     robot.resetHome()
     robot.videoEnable()
     for i in xrange(100):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
         robot.moveCamera( tilt=i, pan=i ) # up & right
 
@@ -326,7 +326,7 @@ def testEmergency( robot ):
     robot.takeoff()
     robot.emergency()
     for i in xrange(10):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
 
 
@@ -334,11 +334,11 @@ def testTakeoff( robot ):
     robot.videoEnable()
     robot.takeoff()
     for i in xrange(100):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
     robot.land()
     for i in xrange(100):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
     print
 
@@ -400,11 +400,11 @@ def testTakePicture( robot ):
     print("TEST take picture")
     robot.videoEnable()
     for i in xrange(10):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
     robot.takePicture()
     for i in xrange(10):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
 
 g_testVideoIndex = 0
@@ -435,7 +435,7 @@ def testVideoProcessing( robot ):
 def testVideoRecording( robot ):
     robot.videoEnable()
     for i in xrange(100):
-        print(i,)
+        #print(i,)
         robot.update( cmd=None )
         if robot.time is not None:
             break
