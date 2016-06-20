@@ -4,10 +4,10 @@ from commands import *
 from bebop import Bebop
 
 
-print ("Connecting to drone...")
+print("Connecting to drone...")
 drone = Bebop( metalog=None, onlyIFrames=True )
 drone.trim()
-print ("Connected.")
+print("Connected.")
 
 
 drone.takeoff()

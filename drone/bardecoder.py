@@ -27,7 +27,8 @@ class Decoder:
             barcode = Barcode(symbol)
             barcodes.append(barcode)
             # do something useful with results
-            print 'decoded', symbol.type, 'symbol', symbol.location, '"%s"' % symbol.data
+            print('decoded', symbol.type, 'symbol', symbol.location, '"%s"' %
+                  symbol.data)
 
         return barcodes
 

@@ -14,7 +14,9 @@ def videoCallback( frame, drone, debug=False ):
    blueUpper = np.array([255, 128, 50], dtype="uint8")
 
    if isinstance(frame, tuple):
-       print "h.264 frame - (frame# = %s, iframe = %s, size = %s)" % (frame[0], frame[1], len(frame[2]))
+       print("h.264 frame - (frame# = %s, iframe = %s, size = %s)" % (frame[0],
+                                                                      frame[1],
+                                                                      len(frame[2])))
    else:
        # determine which pixels fall within the blue boundaries
        # and then blur the binary image
@@ -34,7 +36,7 @@ def videoCallback( frame, drone, debug=False ):
            # compute the (rotated) bounding box around then
            # contour and then draw it
            rect = np.int32(cv2.boxPoints(cv2.minAreaRect(cnt)))
-           print (rect);
+           print(rect);
 
            cv2.drawContours(frame, [rect], -1, (0, 255, 0), 2)
 
@@ -44,12 +46,12 @@ def videoCallback( frame, drone, debug=False ):
        cv2.imshow("Binary", blue)
 
 
-print "Connecting to drone.."
+print("Connecting to drone..")
 drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True )
 drone.videoCbk = videoCallback
 drone.videoEnable()
-print "Connected."
+print("Connected.")
 for i in xrange(10000):
     drone.update( );
 
-print "Battery:", drone.battery
+print("Battery:", drone.battery)

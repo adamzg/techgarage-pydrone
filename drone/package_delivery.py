@@ -10,13 +10,15 @@ decoder = Decoder()
 def videoCallback( frame, drone, debug=False ):
     global decoder
     if isinstance(frame, tuple):
-        print "h.264 frame - (frame# = %s, iframe = %s, size = %s)" % (frame[0], frame[1], len(frame[2]))
+        print("h.264 frame - (frame# = %s, iframe = %s, size = %s)" %
+              (frame[0], frame[1], len(frame[2])))
 
     else:
         barcodes = decoder.decode(frame)
         if len(barcodes) > 0:
             for barcode in barcodes:
-                print 'decoded', barcode.type, 'symbol', barcode.location, '"%s"' % barcode.value
+                print('decoded', barcode.type, 'symbol', barcode.location,
+                      '"%s"' % barcode.value)
                 min_x = min(barcode.location[0][0], barcode.location[1][0], barcode.location[2][0],
                             barcode.location[3][0])
                 max_x = max(barcode.location[0][0], barcode.location[1][0], barcode.location[2][0],
@@ -61,12 +63,12 @@ def videoCallback( frame, drone, debug=False ):
         cv2.waitKey(10)
 
 
-print "Connecting to drone.."
+print("Connecting to drone..")
 drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True, fps = 30 )
 drone.videoCbk = videoCallback
 drone.videoEnable()
 drone.moveCamera(-90, 0)
-print "Connected."
+print("Connected.")
 
 pygame.init()
 size = [100, 100]
@@ -80,13 +82,15 @@ done = False
 clock = pygame.time.Clock()
 
 if pygame.joystick.get_count() == 0:
-    print "No joysticks found"
+    print("No joysticks found")
     done = True
 else:
     joystick = pygame.joystick.Joystick(0)
     joystick.init()
-    print "Initialized %s" % (joystick.get_name())
-    print "Number of buttons %d. Number of axis %d, Number of hats %d" % (joystick.get_numbuttons(), joystick.get_numaxes(), joystick.get_numhats())
+    print("Initialized %s" % (joystick.get_name()))
+    print("Number of buttons %d. Number of axis %d, Number of hats %d" %
+          (joystick.get_numbuttons(), joystick.get_numaxes(),
+           joystick.get_numhats()))
 
 
 # -------- Main Program Loop -----------
@@ -104,14 +108,14 @@ while not done:
 
     if joystick.get_button(0) == 1:
         executing_command = True
-        print "Landing..."
+        print("Landing...")
         if drone.flyingState is None or drone.flyingState == 1: # if taking off then do emegency landing
             drone.emergency()
         drone.land()
 
     if joystick.get_button(3) == 1:
         executing_command = True
-        print "Taking off.."
+        print("Taking off..")
         drone.takeoff()
 
     if joystick.get_button(7) == 1:

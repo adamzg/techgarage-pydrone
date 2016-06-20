@@ -11,7 +11,9 @@ def videoCallback( frame, drone, debug=False ):
    global cnt, command
    cnt = cnt + 1
    if isinstance(frame, tuple):
-       print "h.264 frame - (frame# = %s, iframe = %s, size = %s)" % (frame[0], frame[1], len(frame[2]))
+       print("h.264 frame - (frame# = %s, iframe = %s, size = %s)" % (frame[0],
+                                                                      frame[1],
+                                                                      len(frame[2])))
    else:
        cv2.imshow("image", frame)
        if (cnt % 10 == 0 and command is None):
@@ -32,22 +34,22 @@ matcher = Matcher([("fau-logo", "../opencv/templates/fau-logo.png"),
                    ], min_keypoints_pct_match=10)
 
 
-print "Connecting to drone.."
+print("Connecting to drone..")
 drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True )
 drone.videoCbk = videoCallback
 drone.videoEnable()
-print "Connected."
+print("Connected.")
 for i in xrange(10000):
     if command is None:
         drone.update( );
     elif command == "TAKEOFF":
-        print "Taking offf........................."
+        print("Taking offf.........................")
         drone.takeoff()
         command = None
     elif command == "LAND":
-        print "Landing ..........................."
+        print("Landing ...........................")
         drone.land()
         command = None
 
 
-print "Battery:", drone.battery
+print("Battery:", drone.battery)

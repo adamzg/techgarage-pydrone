@@ -14,7 +14,7 @@ def takeoffCmd():
     # ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING = 0,
     # ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_TAKEOFF = 1,
     return struct.pack("BBH", 1, 0, 1)
-      
+
 def landCmd():
     # ARCOMMANDS_ID_PROJECT_ARDRONE3 = 1,
     # ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING = 0,
@@ -47,7 +47,7 @@ def movePCMDCmd( active, roll, pitch, yaw, gaz ):
 
 def videoAutorecordingCmd( enabled=True ):
     # ARCOMMANDS_ID_PROJECT_ARDRONE3 = 1,
-    # ARCOMMANDS_ID_ARDRONE3_CLASS_PICTURESETTINGS = 19,    
+    # ARCOMMANDS_ID_ARDRONE3_CLASS_PICTURESETTINGS = 19,
     # ARCOMMANDS_ID_ARDRONE3_PICTURESETTINGS_CMD_VIDEOAUTORECORDSELECTION = 5,
     massStorageId = 0 # internal ??
     if enabled:
@@ -82,7 +82,7 @@ def setDateCmd( date ):
     # Date with ISO-8601 format
     return struct.pack("BBH", 0, 4, 1) + date.isoformat() + '\0'
 
-def setTimeCmd( time ):    
+def setTimeCmd( time ):
     # ARCOMMANDS_ID_PROJECT_COMMON = 0,
     # ARCOMMANDS_ID_COMMON_CLASS_COMMON = 4,
     # ARCOMMANDS_ID_COMMON_COMMON_CMD_CURRENTTIME = 2,
@@ -105,7 +105,7 @@ def videoStreamingCmd( enable ):
     "enable video stream?"
     # ARCOMMANDS_ID_PROJECT_ARDRONE3 = 1,
     # ARCOMMANDS_ID_ARDRONE3_CLASS_MEDIASTREAMING = 21,
-    # ARCOMMANDS_ID_ARDRONE3_MEDIASTREAMING_CMD_VIDEOENABLE = 0,        
+    # ARCOMMANDS_ID_ARDRONE3_MEDIASTREAMING_CMD_VIDEOENABLE = 0,
     return struct.pack("BBHB", 1, 21, 0, enable)
 
 
@@ -224,7 +224,7 @@ class CommandSenderReplay( CommandSender ):
 
     def start( self ):
         "block default Thread behavior"
-        print "STARTED Replay"
+        print("STARTED Replay")
 
     def send( self, cmd ):
         if not self.checkAsserts:
@@ -250,24 +250,24 @@ class CommandSenderReplay( CommandSender ):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print __doc__
+        print(__doc__)
         sys.exit(2)
     f = open(sys.argv[1], "rb")
     prefix = f.read(1)
     while len(prefix) > 0:
-        print hex(ord(prefix))
+        print(hex(ord(prefix)))
         assert prefix in [CommandSender.INTERNAL_COMMAND_PREFIX, CommandSender.EXTERNAL_COMMAND_PREFIX]
         term = f.read(1)
         if term != "\xFF":
             header = term + f.read(6)
             frameType, frameId, seqId, totalLen = struct.unpack( "<BBBI", header )
             data = header + f.read( totalLen-7 )
-            print " ".join(["%02X" % ord(x) for x in data])
+            print(" ".join(["%02X" % ord(x) for x in data]))
             term = f.read(1)
         else:
-            print "EMPTY"
+            print("EMPTY")
         prefix = f.read(1)
 
 
-# vim: expandtab sw=4 ts=4 
+# vim: expandtab sw=4 ts=4
 
