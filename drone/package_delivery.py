@@ -39,6 +39,7 @@ def videoCallback( frame, drone, debug=False ):
                 elif center_x - width * 0.5 > 50:
                     color = (0, 0, 255)
                     text = "Go Right"
+
                 elif center_x - width * 0.5 < 50:
                     color = (255, 0, 0)
                     text = "Go Left"
@@ -50,6 +51,10 @@ def videoCallback( frame, drone, debug=False ):
                 cv2.circle(frame, (center_x, center_y), 3, color=color, thickness=2)
                 cv2.putText(frame, org=(width - 100, height - 100), text=text, color=color,
                             fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, )
+
+                if barcode.value == "TechGarage":
+                    drone.update(cmd=movePCMDCmd(True, 0, 0, 0, 0))
+                    drone.land()
                 break
 
         cv2.imshow("Drone feed", frame)
@@ -57,7 +62,7 @@ def videoCallback( frame, drone, debug=False ):
 
 
 print "Connecting to drone.."
-drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True, fps = 10 )
+drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True, fps = 30 )
 drone.videoCbk = videoCallback
 drone.videoEnable()
 drone.moveCamera(-90, 0)
@@ -86,7 +91,7 @@ else:
 
 # -------- Main Program Loop -----------
 
-MAX_SPEED = 10
+MAX_SPEED = 5
 
 while not done:
 

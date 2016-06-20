@@ -37,7 +37,7 @@ else:
 
 # -------- Main Program Loop -----------
 
-MAX_SPEED = 30
+MAX_SPEED = 10
 
 while not done:
 
@@ -91,6 +91,7 @@ while not done:
     if abs(joystick.get_axis(0)) > 0.05 or abs(joystick.get_axis(1)) > 0.05:
         executing_command = True
         print "Left stick %f, %f" % (joystick.get_axis(0), joystick.get_axis(1))
+        drone.update(cmd=movePCMDCmd(True,  1 * joystick.get_axis(0) * MAX_SPEED, -1 * joystick.get_axis(1) * MAX_SPEED, 0, 0))
 
     if abs(joystick.get_axis(3)) > 0.05 or abs(joystick.get_axis(4)) > 0.05:
         executing_command = True
