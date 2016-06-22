@@ -39,7 +39,7 @@ class VideoFrames:
                 if complete:
                     self.frames.append( (self.currentFrameNumber, self.currentFrameFlags, s) )
             if self.verbose:
-                print "processing", frameNumber
+                print("processing", frameNumber)
                 if self.statFirst is None:
                     self.statFirst = frameNumber
                 self.statLast = frameNumber
@@ -53,7 +53,7 @@ class VideoFrames:
         if not self.onlyIFrames or frameFlags == 1:
             if self.parts[ fragmentNumber ] is not None:
                 if self.verbose:
-                    print "duplicity", (frameNumber, fragmentNumber)
+                    print("duplicity", (frameNumber, fragmentNumber))
             self.parts[ fragmentNumber ] = data
 
     def getFrameEx( self ):
@@ -72,8 +72,9 @@ class VideoFrames:
     def stat( self ):
         if self.verbose:
             if self.statFirst != self.statLast:
-                print "Stat:", self.statFirst, self.statLast, self.statCount, 
-                print "%.1f%%" %  (100*self.statCount/float(self.statLast-self.statFirst+1),)
+                print("Stat:", self.statFirst, self.statLast, self.statCount, )
+                print("%.1f%%" %
+                      (100*self.statCount/float(self.statLast-self.statFirst+1),))
 
 
 def navdata2video( inputFile, outputFile, outDir = ".", dumpIndividualFrames=False, startIndex=0 ):
@@ -90,7 +91,7 @@ def navdata2video( inputFile, outputFile, outDir = ".", dumpIndividualFrames=Fal
             if dumpIndividualFrames:
                 fout = open(outDir+os.sep+"frame%04d.bin" % frameIndex, "wb")
                 fout.write(frame)
-                fout.close()                    
+                fout.close()
                 frameIndex += 1
             out.write(frame)
     out.close()
@@ -99,7 +100,7 @@ def navdata2video( inputFile, outputFile, outDir = ".", dumpIndividualFrames=Fal
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print __doc__
+        print(__doc__)
         sys.exit(2)
     if len(sys.argv) == 3:
         navdata2video( sys.argv[1], sys.argv[2] )
@@ -108,5 +109,5 @@ if __name__ == "__main__":
         startIndex = len(os.listdir( outDir ))
         navdata2video( sys.argv[1], sys.argv[2], outDir=outDir, dumpIndividualFrames=True, startIndex=startIndex )
 
-# vim: expandtab sw=4 ts=4 
+# vim: expandtab sw=4 ts=4
 

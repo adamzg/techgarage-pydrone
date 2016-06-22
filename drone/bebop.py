@@ -54,7 +54,7 @@ class JpegReader(Thread):
 
             diff = datetime.datetime.now() - ms
             sum = sum + diff.microseconds
-            #print diff.microseconds, self.interval, self.fps
+            #print(diff.microseconds, self.interval, self.fps)
 
             if self.drone.videoCbk and sum > self.interval:
                 self.drone.videoCbk(image, self.drone, False)
@@ -78,10 +78,10 @@ class Bebop:
         self.navdata = metalog.createLoggedSocket( "navdata", headerFormat="<BBBI" )
         self.navdata.bind( ('',NAVDATA_PORT) )
         if metalog.replay:
-            self.commandSender = CommandSenderReplay(metalog.createLoggedSocket( "cmd", headerFormat="<BBBI" ), 
+            self.commandSender = CommandSenderReplay(metalog.createLoggedSocket( "cmd", headerFormat="<BBBI" ),
                     hostPortPair=(HOST, COMMAND_PORT), checkAsserts=metalog.areAssertsEnabled())
         else:
-            self.commandSender = CommandSender(metalog.createLoggedSocket( "cmd", headerFormat="<BBBI" ), 
+            self.commandSender = CommandSender(metalog.createLoggedSocket( "cmd", headerFormat="<BBBI" ),
                     hostPortPair=(HOST, COMMAND_PORT))
         self.console = metalog.createLoggedInput( "console", myKbhit ).get
         self.metalog = metalog
@@ -130,7 +130,7 @@ class Bebop:
 
     def _update( self, cmd ):
         "internal send command and return navdata"
-        
+
         if not self.manualControl:
             self.manualControl = self.console()
             if self.manualControl:
@@ -150,7 +150,7 @@ class Bebop:
         try:
             parseData( data, robot=self, verbose=False )
         except AssertionError, e:
-            print "AssertionError", e
+            print("AssertionError", e)
 
 
     def update( self, cmd=None, ackRequest=False ):
@@ -178,7 +178,7 @@ class Bebop:
                     if self.videoCbkResults:
                         ret = self.videoCbkResults()
                         if ret is not None:
-                            print ret
+                            print(ret)
                             self.lastImageResult = ret
                 data = self._update( createVideoAckPacket(data) )
             else:
@@ -194,7 +194,7 @@ class Bebop:
             self.videoCbkResults = None
         else:
             self.videoCbkResults = self.metalog.createLoggedInput( "cv2", cbkResult ).get
-        
+
 
 
     def config( self ):
@@ -203,7 +203,7 @@ class Bebop:
         if dt: # for compatibility with older log files
             self.update( cmd=setDateCmd( date=dt.date() ) )
             self.update( cmd=setTimeCmd( time=dt.time() ) )
-        for cmd in setSpeedSettingsCmdList( maxVerticalSpeed=1.0, maxRotationSpeed=90.0, 
+        for cmd in setSpeedSettingsCmdList( maxVerticalSpeed=1.0, maxRotationSpeed=90.0,
                 hullProtection=True, outdoor=True ):
             self.update( cmd=cmd )
         self.update( cmd=requestAllStatesCmd() )
@@ -215,32 +215,32 @@ class Bebop:
     def takeoff( self ):
         self.update( videoRecordingCmd( on=True ) )
         for i in xrange(10):
-            print i,
+            #print(i,)
             self.update( cmd=None )
         print
-        print "Taking off ...",
+        print("Taking off ...",)
         self.update( cmd=takeoffCmd() )
         prevState = None
         for i in xrange(100):
-            print i,
+            #print(i,)
             self.update( cmd=None )
             if self.flyingState != 1 and prevState == 1:
                 break
             prevState = self.flyingState
-        print "FLYING"
-        
+        print("FLYING")
+
     def land( self ):
-        print "Landing ...",
+        print("Landing ...",)
         self.update( cmd=landCmd() )
         for i in xrange(100):
-            print i,
+            #print(i,)
             self.update( cmd=None )
             if self.flyingState == 0: # landed
                 break
-        print "LANDED"
+        print("LANDED")
         self.update( videoRecordingCmd( on=False ) )
         for i in xrange(30):
-            print i,
+            #print(i,)
             self.update( cmd=None )
         print
 
@@ -251,19 +251,19 @@ class Bebop:
         self.update( cmd=emergencyCmd() )
 
     def trim( self ):
-        print "Trim:", 
+        print("Trim:",)
         self.flatTrimCompleted = False
         for i in xrange(10):
-            print i,
+            #print(i,)
             self.update( cmd=None )
         print
         self.update( cmd=trimCmd() )
         for i in xrange(10):
-            print i,
+            #print(i,)
             self.update( cmd=None )
             if self.flatTrimCompleted:
                 break
-   
+
     def takePicture( self ):
         self.update( cmd=takePictureCmd() )
 
@@ -285,14 +285,14 @@ class Bebop:
 
 
     def wait( self, duration ):
-        print "Wait", duration
+        print("Wait", duration)
         assert self.time is not None
         startTime = self.time
         while self.time-startTime < duration:
             self.update()
 
     def flyToAltitude( self, altitude, timeout=3.0 ):
-        print "Fly to altitude", altitude, "from", self.altitude
+        print("Fly to altitude", altitude, "from", self.altitude)
         speed = 20 # 20%
         assert self.time is not None
         assert self.altitude is not None
@@ -311,12 +311,12 @@ class Bebop:
 
 def testCamera( robot ):
     for i in xrange(10):
-        print -i,
+        print(-i,)
         robot.update( cmd=None )
     robot.resetHome()
     robot.videoEnable()
     for i in xrange(100):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
         robot.moveCamera( tilt=i, pan=i ) # up & right
 
@@ -326,7 +326,7 @@ def testEmergency( robot ):
     robot.takeoff()
     robot.emergency()
     for i in xrange(10):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
 
 
@@ -334,11 +334,11 @@ def testTakeoff( robot ):
     robot.videoEnable()
     robot.takeoff()
     for i in xrange(100):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
     robot.land()
     for i in xrange(100):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
     print
 
@@ -351,7 +351,7 @@ def testManualControlException( robot ):
         robot.land()
     except ManualControlException, e:
         print
-        print "ManualControlException"
+        print("ManualControlException")
         if robot.flyingState is None or robot.flyingState == 1: # taking off
             # unfortunately it is not possible to land during takeoff for ARDrone3 :(
             robot.emergency()
@@ -369,7 +369,7 @@ def testFlying( robot ):
         robot.land()
     except ManualControlException, e:
         print
-        print "ManualControlException"
+        print("ManualControlException")
         if robot.flyingState is None or robot.flyingState == 1: # taking off
             # unfortunately it is not possible to land during takeoff for ARDrone3 :(
             robot.emergency()
@@ -384,12 +384,12 @@ def testFlyForward( robot ):
         robot.takeoff()
         for i in xrange(1000):
             robot.update( cmd=movePCMDCmd( True, 0, speed, 0, 0 ) )
-            print robot.altitude
+            print(robot.altitude)
         robot.update( cmd=movePCMDCmd( True, 0, 0, 0, 0 ) )
         robot.land()
     except ManualControlException, e:
         print
-        print "ManualControlException"
+        print("ManualControlException")
         if robot.flyingState is None or robot.flyingState == 1: # taking off
             # unfortunately it is not possible to land during takeoff for ARDrone3 :(
             robot.emergency()
@@ -397,26 +397,26 @@ def testFlyForward( robot ):
 
 
 def testTakePicture( robot ):
-    print "TEST take picture"
+    print("TEST take picture")
     robot.videoEnable()
     for i in xrange(10):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
     robot.takePicture()
     for i in xrange(10):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
 
 g_testVideoIndex = 0
 def videoCallback( data, robot=None, debug=False ):
     global g_testVideoIndex
     g_testVideoIndex += 1
-    pass #print "Video", len(data)
+    pass #print("Video", len(data))
 
 
 
 def testVideoProcessing( robot ):
-    print "TEST video"
+    print("TEST video")
     robot.videoCbk = videoCallback
     robot.videoEnable()
     prevVideoIndex = 0
@@ -428,21 +428,21 @@ def testVideoProcessing( robot ):
                 sys.stderr.write('o')
             prevVideoIndex = g_testVideoIndex
         if i == 200:
-            print "X"
+            print("X")
             robot.update( cmd=movePCMDCmd( False, 0, 0, 0, 0 ) )
         robot.update( cmd=None )
 
 def testVideoRecording( robot ):
     robot.videoEnable()
     for i in xrange(100):
-        print i,
+        #print(i,)
         robot.update( cmd=None )
         if robot.time is not None:
             break
-    print "START"
+    print("START")
     robot.update( cmd=videoRecordingCmd( on=True ) )
     robot.wait( 10.0 )
-    print "STOP"
+    print("STOP")
     robot.update( cmd=videoRecordingCmd( on=False ) )
     robot.wait( 2.0 )
 
@@ -457,7 +457,7 @@ def testSpin( robot ):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print __doc__
+        print(__doc__)
         sys.exit(2)
     metalog=None
     if len(sys.argv) > 2:
@@ -476,7 +476,7 @@ if __name__ == "__main__":
     testVideoProcessing( robot )
 #    testVideoRecording( robot )
 #    testSpin( robot )
-    print "Battery:", robot.battery
+    print("Battery:", robot.battery)
 
-# vim: expandtab sw=4 ts=4 
+# vim: expandtab sw=4 ts=4
 

@@ -18,7 +18,8 @@ class Matcher:
         for (label, filename) in templates:
             img = cv2.imread(filename, 0)
             kp, des = self.sift.detectAndCompute(img, None)
-            print "Analyzed - Label = %s, Filename = %s, # of Keypoints = %s" % (label, filename, len(kp))
+            print("Analyzed - Label = %s, Filename = %s, # of Keypoints = %s" %
+                  (label, filename, len(kp)))
             self.descriptors[label] = (kp, des)
 
 
@@ -40,7 +41,7 @@ class Matcher:
                     good.append([m])
             #print "Label = %s, mathes = %s, keypoints = %s ", (label, len(good), len(template_keypoints))
             match_ratio = len(good) * 100 / len(template_keypoints)
-            print label, match_ratio
+            print(label, match_ratio)
             if match_ratio > self.min_keypoints_pct_match and match_ratio > detected_keypoints_ratio:
                  detected_keypoints_ratio = match_ratio
                  detected_label = label

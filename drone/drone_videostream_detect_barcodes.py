@@ -14,14 +14,16 @@ decoder = Decoder()
 def videoCallback( frame, drone, debug=False ):
     global decoder
     if isinstance(frame, tuple):
-        print "h.264 frame - (frame# = %s, iframe = %s, size = %s)" % (frame[0], frame[1], len(frame[2]))
+        print("h.264 frame - (frame# = %s, iframe = %s, size = %s)" %
+              (frame[0], frame[1], len(frame[2])))
 
     else:
         barcodes = decoder.decode(frame)
         if len(barcodes) > 0:
             for barcode in barcodes:
                 # do something useful with results
-                print 'decoded', barcode.type, 'symbol', barcode.location, '"%s"' % barcode.value
+                print('decoded', barcode.type, 'symbol', barcode.location,
+                      '"%s"' % barcode.value)
                 min_x = min(barcode.location[0][0], barcode.location[1][0], barcode.location[2][0], barcode.location[3][0])
                 max_x = max(barcode.location[0][0], barcode.location[1][0], barcode.location[2][0], barcode.location[3][0])
 
@@ -58,13 +60,13 @@ def videoCallback( frame, drone, debug=False ):
 
 
 
-print "Connecting to drone.."
+print("Connecting to drone..")
 drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True, fps = 0)
 drone.videoCbk = videoCallback
 drone.videoEnable()
 drone.moveCamera(-90, 0)
-print "Connected."
+print("Connected.")
 for i in xrange(10000):
     drone.update( );
 
-print "Battery:", drone.battery
+print("Battery:", drone.battery)
