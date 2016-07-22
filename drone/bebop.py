@@ -104,6 +104,21 @@ class Bebop:
         self.navigateHomeState = None
         self.config()
         self.commandSender.start()
+
+        # Sphero tracking variables
+        self.findSphero = False
+        self.sinceLastSphero = 0
+        self.foundCircle = False
+        self.lastFrame = None
+        self.thisFrame = None
+        self.moveScaler = 0
+        self.objectCenterX = 0
+        self.objectCenterY = 0
+        self.minEdgeVal = 0
+        self.maxEdgeVal = 0
+        self.minCircleRadius = 0
+        self.maxCircleRadius = 0
+
         if self.jpegStream:
             self.videoFrameProcessor = VideoFrames(onlyIFrames=False, verbose=False)
             self.reader = JpegReader(self, self.fps)
