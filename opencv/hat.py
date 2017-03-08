@@ -4,7 +4,7 @@ from pyimagesearch.facedetector import FaceDetector
 
 fd = FaceDetector('cascades/haarcascade_frontalface_default.xml')
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 scaling_factor = 0.5
 
 # Load our overlay image: hat.png

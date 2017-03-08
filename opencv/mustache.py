@@ -22,7 +22,7 @@ fd = FaceDetector('cascades/haarcascade_frontalface_default.xml')
 # if a video path was not supplied, grab the reference
 # to the gray
 # if not args.get("video", False):
-camera = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(0)
 
 # otherwise, load the video
 # else:
