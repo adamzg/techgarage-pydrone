@@ -9,7 +9,7 @@ import cv2
 blueLower = np.array([100, 67, 0], dtype="uint8")
 blueUpper = np.array([255, 128, 50], dtype="uint8")
 
-# load the video
+#### load the video
 camera = cv2.VideoCapture(0)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 768)
