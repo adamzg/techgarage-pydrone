@@ -40,7 +40,7 @@ while True:
 
     y1 = y - hatHeight + int(hatHeight*.3)
     y2 = y + int(hatHeight*.3)
-    x1 = x + hatWidth*0.05
+    x1 = x + int(hatWidth*0.05)
     x2 = x1 + hatWidth
     cropY = 0
 

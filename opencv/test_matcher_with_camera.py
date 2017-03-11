@@ -8,7 +8,7 @@ matcher = Matcher([("fau-logo", "./templates/fau-logo.png"),
                    ("techgarage-logo", "./templates/techgarage-logo.png")
                    ], min_keypoints_pct_match=15)
 
-cam = cv2.VideoCapture(1)
+cam = cv2.VideoCapture(0)
 
 cnt = 0
 while True:
