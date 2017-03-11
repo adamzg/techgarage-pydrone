@@ -39,7 +39,7 @@ else:
 
 # -------- Main Program Loop -----------
 
-MAX_SPEED = 10
+MAX_SPEED = 20
 
 while not done:
     try:
@@ -115,7 +115,7 @@ while not done:
     except:
         print("Error")
         if drone.flyingState is None or drone.flyingState == 1: # if taking off then do emegency landing
-                drone.emergency()
+            drone.emergency()
             drone.land()
 
 
