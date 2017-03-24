@@ -180,6 +180,20 @@ def leftFlipCmd():
     # ARCOMMANDS_ARDRONE3_ANIMATIONS_FLIP_DIRECTION_LEFT = 3
     return struct.pack("<BBHi", 1, 5, 0, 3)
 
+# Not tested
+def changeNameCmd( name ):
+    # ARCOMMANDS_ID_PROJECT_COMMON = 0,
+    # ARCOMMANDS_ID_COMMON_CLASS_SETTINGS = 2
+    # ARCOMMANDS_ID_COMMON_SETTINGS_CMD_PRODUCTNAME = 2
+    return struct.pack("<BBHz", 0, 2, 2, name)
+
+def setPilotingSettingsCmdList( maxAltitude, maxTilt, maxDistance):
+    # ARCOMMANDS_ID_PROJECT_ARDRONE3 = 1,
+    # ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTINGSETTINGS = 2
+    # ARCOMMANDS_ID_ARDRONE3_PILOTINGSETTINGS_CMD_MAXALTITUDE = 0
+    return [ struct.pack("BBHf", 1, 2, 0, maxAltitude),
+             struct.pack("BBHf", 1, 2, 1, maxTilt),
+             struct.pack("BBHf", 1, 2, 3, maxDistance) ]
 
 def packData( payload, ackRequest=False ):
     frameType = 2

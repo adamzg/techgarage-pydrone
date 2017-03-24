@@ -221,6 +221,8 @@ class Bebop:
         for cmd in setSpeedSettingsCmdList( maxVerticalSpeed=1.0, maxRotationSpeed=90.0,
                 hullProtection=True, outdoor=True ):
             self.update( cmd=cmd )
+        for cmd in setPilotingSettingsCmdList( maxAltitude=10.0, maxTilt=15.0, maxDistance=2000.0):
+            self.update( cmd=cmd )
         self.update( cmd=requestAllStatesCmd() )
         self.update( cmd=requestAllSettingsCmd() )
         self.moveCamera( tilt=self.cameraTilt, pan=self.cameraPan )
