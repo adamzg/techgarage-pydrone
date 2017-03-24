@@ -229,6 +229,23 @@ def parseData( data, robot, verbose=False ):
                 if verbose:
                     print("AbsoluteControl:", struct.unpack("B",
                                                             data[11:12])[0])
+            elif commandId == 3:
+                # ARCOMMANDS_ID_ARDRONE3_PILOTINGSETTINGSSTATE_CMD_MAXDISTANCECHANGED = 3
+                if verbose:
+                    print("MaxDistance:", struct.unpack("fff",
+                                                        data[11:11+3*4]))
+            elif commandId == 4:
+                # ARCOMMANDS_ID_ARDRONE3_PILOTINGSETTINGSSTATE_CMD_NOFLYOVERMAXDISTANCECHANGED = 4
+                state = struct.unpack("B", data[11:12])[0]
+                states = ["unlimited", "limited"]
+                if verbose:
+                    print("MaxDistanceLimitationBehavior:", states[state])
+            elif commandId == 10:
+                # ARCOMMANDS_ID_ARDRONE3_PILOTINGSETTINGSSTATE_CMD_BANKEDTURNCHANGED = 10
+                state = struct.unpack("B", data[11:12])[0]
+                states = ["disabled", "enabled"]
+                if verbose:
+                    print("BankedTurn:", states[state])
             else:
                 print("Unknown Piloting Settings State", commandId,)
                 printHex( data[:frameSize] )
@@ -312,7 +329,7 @@ def parseData( data, robot, verbose=False ):
                 printHex( data[:frameSize] )
         else:
             if verbose:
-                print("Unknown ACK:",)
+                print("Unknown ACK:", commandProject, commandClass, commandId)
                 printHex( data[:frameSize] )
     elif frameId == 0x0: # ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING
         assert frameSize == 15, len(data)
