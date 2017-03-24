@@ -467,3 +467,8 @@ _struct_fmt_for_type = {
     'string' : 'z',
     'enum'   : 'i',
 }
+
+# Project: "B"
+# Class: "B"
+# Cmd: "H"
+# Args: See https://github.com/Parrot-Developers/arsdk-xml/tree/master/xml

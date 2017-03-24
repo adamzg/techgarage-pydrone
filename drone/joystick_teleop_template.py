@@ -23,6 +23,9 @@ else:
           (joystick.get_numbuttons(), joystick.get_numaxes(),
            joystick.get_numhats()))
 
+left_trigger_initialized = False
+right_trigger_initialized = False
+
 # -------- Main Program Loop -----------
 
 while not done:
@@ -62,6 +65,19 @@ while not done:
     if abs(joystick.get_axis(3)) > 0.05 or abs(joystick.get_axis(4)) > 0.05:
         print("Right stick %f, %f" % (joystick.get_axis(3),
                                       joystick.get_axis(4)))
+
+    # Triggers initialize at 0 and then reset to -1
+    if joystick.get_axis(2) != 0:
+        left_trigger_initialized = True
+
+    if joystick.get_axis(5) != 0:
+        right_trigger_initialized = True
+
+    if left_trigger_initialized and abs(joystick.get_axis(2) > -.95):
+        print("Left trigger %f" % joystick.get_axis(2))
+
+    if right_trigger_initialized and abs(joystick.get_axis(5) > -.95):
+        print("Right trigger %f" % joystick.get_axis(5))
 
     (hat_x, hat_y) = joystick.get_hat(0)
     if (hat_x != 0 or hat_y !=0):
