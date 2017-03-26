@@ -11,10 +11,10 @@ import struct
 import time
 import numpy
 import subprocess as sp
+import logging
 
 from navdata import *
 from commands import *
-from video import VideoFrames
 
 # this will be in new separate repository as common library fo robotika Python-powered robots
 from apyros.metalog import MetaLog, disableAsserts
@@ -23,55 +23,54 @@ from apyros.manual import myKbhit, ManualControlException
 
 # hits from https://github.com/ARDroneSDK3/ARSDKBuildUtils/issues/5
 
+
 HOST = "192.168.42.1"
 DISCOVERY_PORT = 44444
-
 NAVDATA_PORT = 43210 # d2c_port
 COMMAND_PORT = 54321 # c2d_port
 
 class JpegReader(Thread):
     def __init__(self, drone, fps):
         Thread.__init__(self)
+        self.drone = drone
         self.fps = fps
         self.interval = 0
         if self.fps > 0:
             self.interval = 1000000 // self.fps
-        self.drone = drone
-        self.command = ["ffmpeg", '-i', '-', '-f', 'image2pipe', '-pix_fmt', 'bgr24', '-q:v', '1', '-vcodec', 'rawvideo', '-']
-        self.ffmpeg = sp.Popen(self.command, stdin=sp.PIPE, stdout=sp.PIPE, bufsize=10 ** 8)
+        self.command = ["ffmpeg", '-i', 'bebop.sdp', '-f', 'image2pipe', '-pix_fmt', 'bgr24', '-q:v', '1', '-vcodec', 'rawvideo', '-'] # to stop FFMPEG output add these to the array after bebop.sdp '-loglevel', 'quiet',
+        self.ffmpeg = sp.Popen(self.command, stdout=sp.PIPE, bufsize=10 ** 8)
+        self.done = False
 
     def run(self):
         ms = datetime.datetime.now()
         sum = 0
-        while True:
-            raw_image = self.ffmpeg.stdout.read(640 * 368 * 3)
-
-            # transform the byte read into a numpy array
-            if len(raw_image) != 640 * 368 * 3:
+        while not self.done:
+            raw_image = self.ffmpeg.stdout.read(856 * 480 * 3)
+            if len(raw_image) != 856 * 480 * 3:
                 break
             image = numpy.fromstring(raw_image, dtype='uint8')
-            image = image.reshape((368, 640, 3))
+            image = image.reshape((480, 856, 3))
 
             diff = datetime.datetime.now() - ms
             sum = sum + diff.microseconds
-            #print(diff.microseconds, self.interval, self.fps)
 
-            if self.drone.videoCbk and sum > self.interval:
-                self.drone.videoCbk(image, self.drone, False)
+            if self.drone.videoCallBack and sum > self.interval:
+                self.drone.videoCallBack(image)
 
             if sum > self.interval:
                 sum = 0
-
             ms = datetime.datetime.now()
 
-
-    def appendFrame(self, data):
-        self.ffmpeg.stdin.write(data)
-        self.ffmpeg.stdin.flush()
-
+    def stop(self):
+        done = True
+        print "Killing ffmpeg"
+        self.ffmpeg.kill()
 
 class Bebop:
-    def __init__( self, metalog=None, onlyIFrames=True, jpegStream=False, fps = 0 ):
+
+    def __init__( self, metalog=None, fps=30):
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
         if metalog is None:
             self._discovery()
             metalog = MetaLog()
@@ -85,11 +84,11 @@ class Bebop:
                     hostPortPair=(HOST, COMMAND_PORT))
         self.console = metalog.createLoggedInput( "console", myKbhit ).get
         self.metalog = metalog
-        self.buf = ""
-        self.jpegStream = jpegStream
         self.fps = fps
-        self.videoCbk = None
-        self.videoCbkResults = None
+        self.buf = ""
+        self.videoStartCallback = None
+        self.videoEndCallBack = None
+        self.videoCallBack = None
         self.battery = None
         self.flyingState = None
         self.flatTrimCompleted = False
@@ -119,15 +118,9 @@ class Bebop:
         self.minCircleRadius = 0
         self.maxCircleRadius = 0
 
-        if self.jpegStream:
-            self.videoFrameProcessor = VideoFrames(onlyIFrames=False, verbose=False)
-            self.reader = JpegReader(self, self.fps)
-            self.reader.setDaemon(True)
-            self.reader.start()
-        else:
-            self.videoFrameProcessor = VideoFrames(onlyIFrames=onlyIFrames, verbose=False)
 
     def _discovery( self ):
+        self.logger.info("Discovering drone...")
         "start communication with the robot"
         filename = "tmp.bin" # TODO combination outDir + date/time
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # TCP
@@ -181,36 +174,10 @@ class Bebop:
             elif pongRequired(data):
                 self._parseData( data ) # update self.time
                 data = self._update( createPongPacket(data) )
-            elif videoAckRequired(data):
-                if self.videoCbk:
-                    self.videoFrameProcessor.append( data )
-                    frame = self.videoFrameProcessor.getFrameEx()
-                    if frame:
-                        if not self.jpegStream:
-                            self.videoCbk( frame, self, debug=self.metalog.replay )
-                        else:
-                            self.reader.appendFrame(frame[-1])
-                    if self.videoCbkResults:
-                        ret = self.videoCbkResults()
-                        if ret is not None:
-                            print(ret)
-                            self.lastImageResult = ret
-                data = self._update( createVideoAckPacket(data) )
             else:
                 break
         self._parseData( data )
         return data
-
-
-    def setVideoCallback( self, cbk, cbkResult=None ):
-        "set cbk for collected H.264 encoded video frames & access to results queue"
-        self.videoCbk = cbk
-        if cbkResult is None:
-            self.videoCbkResults = None
-        else:
-            self.videoCbkResults = self.metalog.createLoggedInput( "cv2", cbkResult ).get
-
-
 
     def config( self ):
         # initial cfg
@@ -284,13 +251,26 @@ class Bebop:
     def takePicture( self ):
         self.update( cmd=takePictureCmd() )
 
+    def video_callbacks(self, start, end, image):
+        self.videoStartCallback = start
+        self.videoEndCallBack = end
+        self.videoCallBack = image
+
     def videoEnable( self ):
         "enable video stream"
         self.update( cmd=videoStreamingCmd( enable=True ), ackRequest=True )
+        if self.videoStartCallback is not None:
+            self.videoStartCallback()
+
+        self.reader = JpegReader(self, self.fps)
+        self.reader.start()
 
     def videoDisable( self ):
         "enable video stream"
+        self.reader.stop()
         self.update( cmd=videoStreamingCmd( enable=False ), ackRequest=True )
+        if self.videoEndCallBack is not None:
+            self.videoEndCallBack()
 
     def moveCamera( self, tilt, pan ):
         "Tilt/Pan camera consign for the drone (in degrees)"
@@ -323,177 +303,6 @@ class Bebop:
         self.update( movePCMDCmd( True, 0, 0, 0, 0 ) )
 
 
-
-###############################################################################################
-
-def testCamera( robot ):
-    for i in xrange(10):
-        print(-i,)
-        robot.update( cmd=None )
-    robot.resetHome()
-    robot.videoEnable()
-    for i in xrange(100):
-        #print(i,)
-        robot.update( cmd=None )
-        robot.moveCamera( tilt=i, pan=i ) # up & right
-
-
-def testEmergency( robot ):
-    "test of reported state change"
-    robot.takeoff()
-    robot.emergency()
-    for i in xrange(10):
-        #print(i,)
-        robot.update( cmd=None )
-
-
-def testTakeoff( robot ):
-    robot.videoEnable()
-    robot.takeoff()
-    for i in xrange(100):
-        #print(i,)
-        robot.update( cmd=None )
-    robot.land()
-    for i in xrange(100):
-        #print(i,)
-        robot.update( cmd=None )
-    print
-
-
-def testManualControlException( robot ):
-    robot.videoEnable()
-    try:
-        robot.trim()
-        robot.takeoff()
-        robot.land()
-    except ManualControlException, e:
-        print
-        print("ManualControlException")
-        if robot.flyingState is None or robot.flyingState == 1: # taking off
-            # unfortunately it is not possible to land during takeoff for ARDrone3 :(
-            robot.emergency()
-        robot.land()
-
-
-def testFlying( robot ):
-    robot.videoEnable()
-    try:
-        robot.trim()
-        robot.takeoff()
-        robot.flyToAltitude( 2.0 )
-        robot.wait( 2.0 )
-        robot.flyToAltitude( 1.0 )
-        robot.land()
-    except ManualControlException, e:
-        print
-        print("ManualControlException")
-        if robot.flyingState is None or robot.flyingState == 1: # taking off
-            # unfortunately it is not possible to land during takeoff for ARDrone3 :(
-            robot.emergency()
-        robot.land()
-
-
-def testFlyForward( robot ):
-    robot.videoEnable()
-    try:
-        speed = 20
-        robot.trim()
-        robot.takeoff()
-        for i in xrange(1000):
-            robot.update( cmd=movePCMDCmd( True, 0, speed, 0, 0 ) )
-            print(robot.altitude)
-        robot.update( cmd=movePCMDCmd( True, 0, 0, 0, 0 ) )
-        robot.land()
-    except ManualControlException, e:
-        print
-        print("ManualControlException")
-        if robot.flyingState is None or robot.flyingState == 1: # taking off
-            # unfortunately it is not possible to land during takeoff for ARDrone3 :(
-            robot.emergency()
-        robot.land()
-
-
-def testTakePicture( robot ):
-    print("TEST take picture")
-    robot.videoEnable()
-    for i in xrange(10):
-        #print(i,)
-        robot.update( cmd=None )
-    robot.takePicture()
-    for i in xrange(10):
-        #print(i,)
-        robot.update( cmd=None )
-
-g_testVideoIndex = 0
-def videoCallback( data, robot=None, debug=False ):
-    global g_testVideoIndex
-    g_testVideoIndex += 1
-    pass #print("Video", len(data))
-
-
-
-def testVideoProcessing( robot ):
-    print("TEST video")
-    robot.videoCbk = videoCallback
-    robot.videoEnable()
-    prevVideoIndex = 0
-    for i in xrange(400):
-        if i % 10 == 0:
-            if prevVideoIndex == g_testVideoIndex:
-                sys.stderr.write('.')
-            else:
-                sys.stderr.write('o')
-            prevVideoIndex = g_testVideoIndex
-        if i == 200:
-            print("X")
-            robot.update( cmd=movePCMDCmd( False, 0, 0, 0, 0 ) )
-        robot.update( cmd=None )
-
-def testVideoRecording( robot ):
-    robot.videoEnable()
-    for i in xrange(100):
-        #print(i,)
-        robot.update( cmd=None )
-        if robot.time is not None:
-            break
-    print("START")
-    robot.update( cmd=videoRecordingCmd( on=True ) )
-    robot.wait( 10.0 )
-    print("STOP")
-    robot.update( cmd=videoRecordingCmd( on=False ) )
-    robot.wait( 2.0 )
-
-
-def testSpin( robot ):
-    "the motors do not spin - the behavior is different to Rolling Spider"
-    for i in xrange(10):
-        robot.update( cmd=movePCMDCmd( True, 0, 0, 0, 0 ) )
-    for i in xrange(10):
-        robot.update( cmd=movePCMDCmd( False, 0, 0, 0, 0 ) )
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(2)
-    metalog=None
-    if len(sys.argv) > 2:
-        metalog = MetaLog( filename=sys.argv[2] )
-    if len(sys.argv) > 3 and sys.argv[3] == 'F':
-        disableAsserts()
-
-    robot = Bebop( metalog=metalog )
-#    testCamera( robot )
-#    testEmergency( robot )
-#    testTakeoff( robot )
-#    testManualControlException( robot )
-#    testTakePicture( robot )
-#    testFlying( robot )
-#    testFlyForward( robot )
-    testVideoProcessing( robot )
-#    testVideoRecording( robot )
-#    testSpin( robot )
-    print("Battery:", robot.battery)
 
 # vim: expandtab sw=4 ts=4
 
