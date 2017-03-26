@@ -343,8 +343,7 @@ def parseData( data, robot, verbose=False ):
         timestamp = seconds + nanoseconds/1000000000.
         robot.time = timestamp
         if verbose:
-            # print("Time" , timestamp)
-            pass
+            print("Time" , timestamp)
     data = data[frameSize:]
     return data
 
