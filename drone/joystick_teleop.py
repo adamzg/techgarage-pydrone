@@ -1,16 +1,30 @@
 import pygame
 import cv2
 from commands import *
+import logging
 from bebop import Bebop
 
-def videoCallback( frame, drone, debug=False ):
-    cv2.imshow("image", frame)
+logging.basicConfig(level=logging.DEBUG)
+
+wnd = None
+def video_frame(frame):
+    cv2.imshow("Drone", frame)
     cv2.waitKey(10)
 
+def video_start():
+    print("Starting video...")
+    cv2.namedWindow("Drone")
+
+def video_end():
+    print("Ending video...")
+    cv2.destroyWindow("Drone")
+    # Have to send waitKey several times on Unix to make window disappear
+    for i in range(1, 5):
+        cv2.waitKey(1)
 
 print("Connecting to drone..")
-drone = Bebop( metalog=None, onlyIFrames=False, jpegStream=True )
-drone.videoCbk = videoCallback
+drone = Bebop()
+drone.video_callbacks(video_start, video_end, video_frame)
 drone.videoEnable()
 print("Connected.")
 

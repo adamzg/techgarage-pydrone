@@ -5,7 +5,7 @@ from bebop import Bebop
 
 
 print("Connecting to drone...")
-drone = Bebop( metalog=None, onlyIFrames=True )
+drone = Bebop()
 drone.trim()
 print("Connected.")
 

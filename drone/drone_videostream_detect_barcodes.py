@@ -1,17 +1,18 @@
-from email.iterators import body_line_iterator
-
 import cv2
 import numpy as np
 from bebop import Bebop
 from bardecoder import Decoder
 from bardecoder import Barcode
+import logging
 
 cnt = 0
 
 decoder = Decoder()
 
+logging.basicConfig(level=logging.DEBUG)
 
-def callback( frame ):
+wnd = None
+def video_frame(frame):
     barcodes = decoder.decode(frame)
     if len(barcodes) > 0:
         for barcode in barcodes:
@@ -51,12 +52,21 @@ def callback( frame ):
     cv2.imshow("Drone", frame)
     cv2.waitKey(10)
 
+def video_start():
+    print("Starting video...")
+    cv2.namedWindow("Drone")
 
+def video_end():
+    print("Ending video...")
+    cv2.destroyWindow("Drone")
+    # Have to send waitKey several times on Unix to make window disappear
+    for i in range(1, 5):
+        cv2.waitKey(1)
 
 
 print("Connecting to drone..")
-drone = Bebop(fps=1)
-drone.videoCallBack = callback
+drone = Bebop()
+drone.video_callbacks(video_start, video_end, video_frame)
 drone.videoEnable()
 #drone.moveCamera(-90, 0)
 print("Connected.")

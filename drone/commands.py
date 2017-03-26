@@ -180,12 +180,12 @@ def leftFlipCmd():
     # ARCOMMANDS_ARDRONE3_ANIMATIONS_FLIP_DIRECTION_LEFT = 3
     return struct.pack("<BBHi", 1, 5, 0, 3)
 
-# Not tested
+# Doesn't work??? Not sure why
 def changeNameCmd( name ):
     # ARCOMMANDS_ID_PROJECT_COMMON = 0,
     # ARCOMMANDS_ID_COMMON_CLASS_SETTINGS = 2
     # ARCOMMANDS_ID_COMMON_SETTINGS_CMD_PRODUCTNAME = 2
-    return struct.pack("<BBHz", 0, 2, 2, name)
+    return struct.pack("<BBH%ds" % len(name), 0, 2, 2, name)
 
 def setPilotingSettingsCmdList( maxAltitude, maxTilt, maxDistance):
     # ARCOMMANDS_ID_PROJECT_ARDRONE3 = 1,

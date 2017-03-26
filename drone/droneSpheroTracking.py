@@ -4,6 +4,7 @@ import pygame
 import time
 from commands import *
 import numpy
+import logging
 
 def mergeSort(lst):
     if len(lst) <= 1:
@@ -197,10 +198,201 @@ def videoCallback( frame, drone, debug=False ):
             drone.sinceLastSphero = 0
 
         cnt += 1
-        cv2.imshow("Drone Video", frame)
+        cv2.imshow("Drone", frame)
         # cv2.imshow("Motion Detection", frameDelta)
         cv2.imshow("Threshold Edges", edges)
         cv2.imshow("Threshold", thresh)
+        cv2.waitKey(10)
+
+
+logging.basicConfig(level=logging.DEBUG)
+
+wnd = None
+def video_frame(frame):
+    # Initialize the frame size for drone adjustment
+    if drone.frameWidth == 0:
+        drone.frameWidth = numpy.size(frame, 1)
+    if drone.frameHeight == 0:
+        drone.frameHeight = numpy.size(frame, 0)
+
+    # Initialize variables to compare the current frame to
+    if drone.thisFrame is None:
+        drone.lastFrame = frame
+    else:
+        drone.lastFrame = drone.thisFrame
+    drone.thisFrame = frame
+
+    # # Convert frames to grayscale and blur them
+    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.GaussianBlur(gray, (21, 21), 0)
+    #
+    # grayLastFrame = cv2.cvtColor(drone.lastFrame, cv2.COLOR_BGR2GRAY)
+    # grayLastFrame = cv2.GaussianBlur(grayLastFrame, (21, 21), 0)
+    #
+    # # compute the absolute difference between the current frame and the last frame
+    # frameDelta = cv2.absdiff(grayLastFrame, gray)
+
+    ret, thresh = cv2.threshold(frame, 127, 255, cv2.THRESH_BINARY)
+    # edges = cv2.cvtColor(edges, cv2.COLOR_BGR2GRAY)
+
+    # Find edges after motion detection
+    edges = cv2.Canny(thresh, drone.minEdgeVal, drone.maxEdgeVal)
+
+    if drone.pictureBoolean:
+        drone.pictureBoolean = False
+        cv2.imwrite("saved_image.jpg", edges)
+
+    # Find sphero using circles
+    if drone.findSphero:
+        # Find circles after detecting edges
+        circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, 1.2, 5,
+                                   param1=50, param2=30, minRadius=drone.minCircleRadius, maxRadius=drone.maxCircleRadius)
+        # circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, 1.2, 10, minRadius=drone.minCircleRadius, maxRadius=drone.maxCircleRadius)
+
+        if circles is not None:
+            circles = numpy.uint16(numpy.around(circles))
+            listX = []
+            listY = []
+            listR = []
+
+            for i in circles[0, :]:
+                # # draw the outer circle
+                # cv2.circle(edges, (i[0], i[1]), i[2], (255, 255, 255), 2)
+                # # draw the center of the circle
+                # cv2.circle(edges, (i[0], i[1]), 2, (255, 255, 255), 3)
+
+                # Save the centers and radii
+                listX.append(i[0])
+                listY.append(i[1])
+                listR.append(i[2])
+                # print("Edges circle center at: " + str(i[0]) + ", " + str(i[1]))
+
+            # Sort the centers and radii and print/draw the median
+            sortedX = mergeSort(listX)
+            sortedY = mergeSort(listY)
+            sortedR = mergeSort(listR)
+
+            medianX = sortedX[len(sortedX) // 2]
+            medianY = sortedY[len(sortedY) // 2]
+            medianR = sortedR[len(sortedR) // 2]
+
+            drone.objectCenterX = medianX
+            drone.objectCenterY = medianY
+
+            cv2.circle(edges, (medianX, medianY), medianR, (255,255,255), 2)
+            cv2.circle(edges, (medianX, medianY), 2, (255,255,255), 2)
+            # print("Median edges circle center: " + str(medianX) + ", " + str(medianY) + " with radius " + str(medianR))
+
+            drone.sinceLastSphero = 0
+            drone.foundCircle = True
+        else:
+            # Fake a circle in the center if none found
+            drone.objectCenterX = drone.frameWidth >> 1
+            drone.objectCenterY = drone.frameHeight >> 1
+
+            drone.sinceLastSphero += 1
+            drone.foundCircle = False
+    else:
+        # Fake a circle in the center if none found
+        drone.objectCenterX = drone.frameWidth >> 1
+        drone.objectCenterY = drone.frameHeight >> 1
+        drone.foundCircle = False
+
+    # Find sphero using blobs if no circles found
+    if drone.findSphero and not drone.foundCircle:
+        kernel = numpy.ones((5, 5), numpy.uint8)
+        edges = cv2.dilate(edges, kernel, iterations=1)
+        edges = cv2.erode(edges, kernel, iterations=1)
+
+        params = cv2.SimpleBlobDetector_Params()
+
+        # Filter by Circularity
+        # params.filterByCircularity = True
+        # params.minCircularity = 0.6
+
+        # Filter by Area.
+        # params.filterByArea = True
+        # params.minArea = 16
+
+        detector = cv2.SimpleBlobDetector_create(params)
+        keypoints = detector.detect(edges)
+
+        if keypoints is not None:
+            listX = []
+            listY = []
+            listR = []
+
+            for keypoint in keypoints:
+                # # draw the outer circle
+                # cv2.circle(edges, (i[0], i[1]), i[2], (255, 255, 255), 2)
+                # # draw the center of the circle
+                # cv2.circle(edges, (i[0], i[1]), 2, (255, 255, 255), 3)
+
+                # Save the centers and radii
+                # print point.pt[0]
+                listX.append(int(keypoint.pt[0]))
+                listY.append(int(keypoint.pt[1]))
+                listR.append(int(keypoint.size / 2))
+                # print("Edges circle center at: " + str(i[0]) + ", " + str(i[1]))
+                # print keypoint.pt
+
+            if len(listX) > 0 and len(listY) > 0 and len(listR) > 0:
+                # Sort the centers and radii and print/draw the median
+                sortedX = mergeSort(listX)
+                sortedY = mergeSort(listY)
+                sortedR = mergeSort(listR)
+
+                # print sortedX
+                medianX = sortedX[len(sortedX) // 2]
+                medianY = sortedY[len(sortedY) // 2]
+                medianR = sortedR[len(sortedR) // 2]
+
+                drone.objectCenterX = medianX
+                drone.objectCenterY = medianY
+
+                cv2.circle(edges, (medianX, medianY), medianR, (255,255,255), 2)
+                cv2.circle(edges, (medianX, medianY), 2, (255,255,255), 2)
+                # print("Median edges circle center: " + str(medianX) + ", " + str(medianY) + " with radius " + str(medianR))
+
+                drone.sinceLastSphero = 0
+            else:
+                # Fake a circle in the center if none found
+                drone.objectCenterX = drone.frameWidth >> 1
+                drone.objectCenterY = drone.frameHeight >> 1
+
+                drone.sinceLastSphero += 1
+        else:
+            # Fake a circle in the center if none found
+            drone.objectCenterX = drone.frameWidth >> 1
+            drone.objectCenterY = drone.frameHeight >> 1
+
+            drone.sinceLastSphero += 1
+    elif not drone.foundCircle:
+        # Fake a circle in the center if none found
+        drone.objectCenterX = drone.frameWidth >> 1
+        drone.objectCenterY = drone.frameHeight >> 1
+        drone.sinceLastSphero = 0
+
+    cnt += 1
+    cv2.imshow("Drone", frame)
+    # cv2.imshow("Motion Detection", frameDelta)
+    cv2.imshow("Threshold Edges", edges)
+    cv2.imshow("Threshold", thresh)
+    cv2.waitKey(10)
+
+def video_start():
+    print("Starting video...")
+    cv2.namedWindow("Drone")
+    cv2.namedWindow("Threshold Edges")
+    cv2.namedWindow("Threshold")
+
+def video_end():
+    print("Ending video...")
+    cv2.destroyWindow("Drone")
+    cv2.destroyWindow("Threshold Edges")
+    cv2.destroyWindow("Threshold")
+    # Have to send waitKey several times on Unix to make window disappear
+    for i in range(1, 5):
         cv2.waitKey(1)
 
 def scale(value, scaler):
@@ -223,9 +415,9 @@ frames = 0
 lastFrames = 0
 
 print("Connecting to drone...")
-drone = Bebop( metalog=None, onlyIFrames=True, jpegStream=True)
+drone = Bebop()
 drone.trim()
-drone.videoCbk = videoCallback
+drone.video_callbacks(video_start, video_end, video_frame)
 drone.videoEnable()
 drone.minEdgeVal = 30
 drone.maxEdgeVal = 50

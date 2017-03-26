@@ -267,11 +267,16 @@ def parseData( data, robot, verbose=False ):
 
         elif (commandProject, commandClass) == (1,12):
             # ARCOMMANDS_ID_ARDRONE3_CLASS_SPEEDSETTINGSSTATE
+            #  ARCOMMANDS_ID_ARDRONE3_SPEEDSETTINGSSTATE_CMD_HULLPROTECTIONCHANGED = 2,
+            #  ARCOMMANDS_ID_ARDRONE3_SPEEDSETTINGSSTATE_CMD_OUTDOORCHANGED = 3,
+            if commandId == 0:
             #  ARCOMMANDS_ID_ARDRONE3_SPEEDSETTINGSSTATE_CMD_MAXVERTICALSPEEDCHANGED = 0,
+                if verbose:
+                    print("MaxVerticalSpeed:",  struct.unpack("fff", data[11:11+3*4]))
+            elif commandId == 1:
             #  ARCOMMANDS_ID_ARDRONE3_SPEEDSETTINGSSTATE_CMD_MAXROTATIONSPEEDCHANGED,
-            #  ARCOMMANDS_ID_ARDRONE3_SPEEDSETTINGSSTATE_CMD_HULLPROTECTIONCHANGED,
-            #  ARCOMMANDS_ID_ARDRONE3_SPEEDSETTINGSSTATE_CMD_OUTDOORCHANGED,
-            pass
+                if verbose:
+                    print("MaxRotationSpeed:", struct.unpack("fff", data[11:11+3*4]))
 
         elif (commandProject, commandClass) == (1,16):
             # ARCOMMANDS_ID_ARDRONE3_CLASS_SETTINGSSTATE = 16,
@@ -338,7 +343,8 @@ def parseData( data, robot, verbose=False ):
         timestamp = seconds + nanoseconds/1000000000.
         robot.time = timestamp
         if verbose:
-            print("Time" , timestamp)
+            # print("Time" , timestamp)
+            pass
     data = data[frameSize:]
     return data
 

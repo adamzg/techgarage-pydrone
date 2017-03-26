@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
-
+import logging
 from bebop import Bebop
 
+logging.basicConfig(level=logging.DEBUG)
 
-def callback( frame ):
+wnd = None
+def video_frame(frame):
    blueLower = np.array([100, 67, 0], dtype="uint8")
    blueUpper = np.array([255, 128, 50], dtype="uint8")
 
@@ -31,14 +33,26 @@ def callback( frame ):
        cv2.drawContours(frame, [rect], -1, (0, 255, 0), 2)
 
    # show the frame and the binary image
-   cv2.imshow("Tracking", frame)
+   cv2.imshow("Drone", frame)
    cv2.waitKey(10)
    cv2.imshow("Binary", blue)
 
+def video_start():
+    print("Starting video...")
+    cv2.namedWindow("Drone")
+    cv2.namedWindow("Binary")
+
+def video_end():
+    print("Ending video...")
+    cv2.destroyWindow("Drone")
+    cv2.destroyWindow("Binary")
+    # Have to send waitKey several times on Unix to make window disappear
+    for i in range(1, 5):
+        cv2.waitKey(1)
 
 print("Connecting to drone..")
-drone = Bebop( )
-drone.videoCallBack = callback
+drone = Bebop()
+drone.video_callbacks(video_start, video_end, video_frame)
 drone.videoEnable()
 print("Connected.")
 for i in xrange(10000):

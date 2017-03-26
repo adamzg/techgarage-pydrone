@@ -12,11 +12,11 @@ def video_frame(frame):
     cv2.waitKey(10)
 
 def video_start():
-    print "Starting video..."
+    print("Starting video...")
     cv2.namedWindow("Drone")
 
 def video_end():
-    print "Ending video..."
+    print("Ending video...")
     cv2.destroyWindow("Drone")
     # Have to send waitKey several times on Unix to make window disappear
     for i in range(1, 5):
