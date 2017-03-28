@@ -63,14 +63,14 @@ class JpegReader(Thread):
 
     def stop(self):
         done = True
-        print "Killing ffmpeg"
+        print("Killing ffmpeg")
         self.ffmpeg.kill()
 
 class Bebop:
 
-    def __init__( self, metalog=None, fps=30):
+    def __init__(self, metalog=None, fps=30, loggingLevel=logging.INFO, navdataVerbose=False):
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(loggingLevel)
         if metalog is None:
             self._discovery()
             metalog = MetaLog()
@@ -101,6 +101,7 @@ class Bebop:
         self.cameraTilt, self.cameraPan = 0,0
         self.lastImageResult = None
         self.navigateHomeState = None
+        self.navdataVerbose = navdataVerbose
         self.config()
         self.commandSender.start()
 
@@ -156,9 +157,9 @@ class Bebop:
 
     def _parseData( self, data ):
         try:
-            parseData( data, robot=self, verbose=False )
+            parseData( data, robot=self )
         except AssertionError, e:
-            print("AssertionError", e)
+            self.logger.info("AssertionError: %s", e)
 
 
     def update( self, cmd=None, ackRequest=False ):
@@ -199,34 +200,28 @@ class Bebop:
     def takeoff( self ):
         self.update( videoRecordingCmd( on=True ) )
         for i in xrange(10):
-            #print(i,)
             self.update( cmd=None )
-        print
-        print("Taking off ...",)
+        self.logger.info("Taking off...")
         self.update( cmd=takeoffCmd() )
         prevState = None
         for i in xrange(100):
-            #print(i,)
             self.update( cmd=None )
             if self.flyingState != 1 and prevState == 1:
                 break
             prevState = self.flyingState
-        print("FLYING")
+        self.logger.info("FLYING")
 
     def land( self ):
-        print("Landing ...",)
+        self.logger.info("Landing...")
         self.update( cmd=landCmd() )
         for i in xrange(100):
-            #print(i,)
             self.update( cmd=None )
             if self.flyingState == 0: # landed
                 break
-        print("LANDED")
+        self.logger.info("LANDED")
         self.update( videoRecordingCmd( on=False ) )
         for i in xrange(30):
-            #print(i,)
             self.update( cmd=None )
-        print
 
     def hover( self ):
         self.update( cmd=movePCMDCmd( active=True, roll=0, pitch=0, yaw=0, gaz=0 ) )
@@ -235,15 +230,12 @@ class Bebop:
         self.update( cmd=emergencyCmd() )
 
     def trim( self ):
-        print("Trim:",)
+        self.logger.info("Trim")
         self.flatTrimCompleted = False
         for i in xrange(10):
-            #print(i,)
             self.update( cmd=None )
-        print
         self.update( cmd=trimCmd() )
         for i in xrange(10):
-            #print(i,)
             self.update( cmd=None )
             if self.flatTrimCompleted:
                 break
@@ -282,14 +274,14 @@ class Bebop:
 
 
     def wait( self, duration ):
-        print("Wait", duration)
+        self.logger.info("Wait: %d", duration)
         assert self.time is not None
         startTime = self.time
         while self.time-startTime < duration:
             self.update()
 
     def flyToAltitude( self, altitude, timeout=3.0 ):
-        print("Fly to altitude", altitude, "from", self.altitude)
+        self.logger.info("Fly to altitude %f from %f", altitude, self.altitude)
         speed = 20 # 20%
         assert self.time is not None
         assert self.altitude is not None
@@ -301,8 +293,6 @@ class Bebop:
             while self.altitude < altitude and self.time-startTime < timeout:
                 self.update( movePCMDCmd( True, 0, 0, 0, speed ) )
         self.update( movePCMDCmd( True, 0, 0, 0, 0 ) )
-
-
 
 # vim: expandtab sw=4 ts=4
 
