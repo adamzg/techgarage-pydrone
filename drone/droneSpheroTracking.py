@@ -30,6 +30,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 wnd = None
 def video_frame(frame):
+    global cnt
     # Initialize the frame size for drone adjustment
     if drone.frameWidth == 0:
         drone.frameWidth = numpy.size(frame, 1)

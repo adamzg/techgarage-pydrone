@@ -130,7 +130,8 @@ while not done:
         print("Error")
         if drone.flyingState is None or drone.flyingState == 1: # if taking off then do emegency landing
             drone.emergency()
-            drone.land()
+        drone.land()
+        done = True
 
 
 # Close the window and quit.
